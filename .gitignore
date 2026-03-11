@@ -1,0 +1,6 @@
+dist/
+.env
+model/
+fine_tuned/
+datasets/
+logs/

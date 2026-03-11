@@ -1,0 +1,30 @@
+AutoModelForCausalLM:
+  device_map: "auto"
+  dtype: "auto"
+  attn_implementation: 'eager'
+
+SFT:                                                 # To set SFTConfig related to TRL fine-tuning
+  output_dir: ""                                    # Directory to save adapters
+  num_train_epochs: 2                               # Number of training epochs
+  per_device_train_batch_size: 4                    # Batch size per device during training
+  gradient_accumulation_steps: 8                    # Gradient accumulation during training
+  logging_strategy: "steps"                         # Log every steps
+  eval_strategy: "steps"                            # Evaluate loss metrics based on steps
+  eval_steps: 50                                    # Evaluate loss metrics every 50 steps
+  logging_steps: 50                                 # Log loss metrics every 50 steps
+  save_strategy: "epoch"                            # Save checkpoint every epoch
+  save_total_limit: 100                             # limit for the total number of checkpoints to keep.
+  learning_rate: 1e-5                               # Learning rate,
+  lr_scheduler_type: "cosine"                       # Cosine scheduler is often better for full FT
+  max_length: ""                                    # Max sequence length for model and packing of the dataset
+  gradient_checkpointing: True                      # Use gradient checkpointing to save memory
+  packing: false                                    # Groups multiple samples in the dataset into a single sequence
+  optim: "adamw_torch_fused"                        # Use fused adamw optimizer
+  bf16: true                                        # Use bf16 for mixed precision training
+  completion_only_loss: true                        # Train on completion only to improve quality
+#  report_to: "none"                                  # No reporting.
+  PYTORCH_MPS_HIGH_WATERMARK_RATIO: 0.0             # Fine-tune Large Language Models (LLMs) on Mac computers without running out of memory.
+
+
+#SFT_Train:
+#  resume_from_checkpoint: false

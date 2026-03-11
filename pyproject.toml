@@ -1,0 +1,26 @@
+[project]
+name = "FineTuning"
+version = "0.0.1"
+description = "A library to provide an easier way to fine-tune an existing model on a dataset."
+authors = [
+    { name = "Ali Rezagholizadeh", email = "alirezagholizadeh70@gmail.com" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+#[tool.setuptools.dynamic]
+dependencies = [
+    "python-dotenv",
+    "torch",
+    "huggingface_hub",
+    "transformers",
+    "accelerate",
+    "tzdata"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+[project.urls]
+Homepage = ""
+Issues = ""
