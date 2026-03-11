@@ -1,0 +1,25 @@
+SolidConfig:
+  MODEL_BASE_DIR_NAME: "model"
+  FINETUNE_BASE_DIR_NAME: "fine_tuned"
+  DATA_BASE_DIR_NAME: "datasets"
+  EVAL_RESULTS_DIR_NAME: "evaluation_results"
+  ENV_NAME: ".env"
+  HUGGINGFACE_ACCESS_TOKEN_ENV_NAME: "HUG_ACCESS_TOKEN"
+
+FineTune:
+  FineTuneName: "FunctionGemma_MobileActions_TRLSFTfull"
+  Model:
+    Original:
+      name: "functiongemma-270m-it"
+      hug_base_model_name: "google/functiongemma-270m-it"
+    PreFineTuned:
+      name: "FunctionGemma_270M_Mobile_Actions"
+      hug_base_model_name: "litert-community/FunctionGemma_270M_Mobile_Actions"
+  FROM: "Original"                              # should be one of: [Original, PreFineTuned]
+  NumEpochs: 2
+
+  Data:
+    name: "google_mobile-actions"
+    hug_base_data_name: "google/mobile-actions"
+
+
