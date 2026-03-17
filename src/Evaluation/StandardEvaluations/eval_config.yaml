@@ -1,0 +1,39 @@
+# Evaluation config (inherits paths and model/data names from run_config.yaml and finetune_config.yaml).
+# Load run_config.yaml first; this file adds/overrides only the Evaluate section.
+
+Evaluate:
+  # Models to compare: fine-tuned (from FineTune run) and baseline (from FineTune/Model/PreFineTuned)
+  use_fine_tuned: true
+  use_baseline: true
+
+  # Dataset: uses FineTune/Data from run_config; eval split only
+  max_eval_samples: null   # null = use full eval split; set to int to cap for quick runs
+
+  # which hyperparameter:
+  path:
+    hyperparameter_name: "hyperP_setting_1"
+
+  # Metrics to compute (all use reference completion from dataset)
+  metrics:
+    rouge: true
+    bleu: true
+    bertscore: true
+
+  # LLM-as-a-Judge: use a stronger model to grade outputs (accuracy, tone, relevance)
+  llm_judge:
+    enabled: false
+    provider: "openai"           # openai | anthropic | huggingface
+    model: "gpt-4o-mini"        # for openai: gpt-4o, gpt-4o-mini; for anthropic: claude-3-5-sonnet; for huggingface: Hugging Face model id (e.g. meta-llama/Llama-3.2-3B-Instruct, Qwen/Qwen2.5-7B-Instruct)
+    env_api_key_name: "OPENAI_API_KEY"   # OPENAI_API_KEY | ANTHROPIC_API_KEY | HUG_ACCESS_TOKEN (match run_config SolidConfig.HUGGINGFACE_ACCESS_TOKEN_ENV_NAME for HF)
+    criteria: ["accuracy", "relevance", "tone"]
+
+  # Generation settings for evaluation
+  generation:
+    max_new_tokens: 1024
+    do_sample: false
+    temperature: 0.0
+
+  # Optional: LightEval / TruLens / Okareo (future integration)
+  # lighteval: { enabled: false }
+  # trulens: { enabled: false }
+  # okareo: { enabled: false }

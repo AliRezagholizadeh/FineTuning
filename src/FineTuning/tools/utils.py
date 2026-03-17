@@ -3,20 +3,32 @@ from pathlib import Path
 import copy
 
 
-def get_model_dir_path(config, eval_fine_tuned = False, to_save: bool = False) -> Path:
+def get_model_dir_path(config, eval_fine_tuned = False, pre_finetuned_model = False, to_save: bool = False) -> Path:
+    """
+    
+    :param config: 
+    :param eval_fine_tuned: To access fined-tuned model for the evaluation. It will access Evaluate parameter in the config to access specific hyper_parameters.
+    :param pre_trained_model: To access PreFineTuned model.
+    :param to_save: 
+    :return: 
+    """
     assert "FROM" in config["FineTune"], "From which base dir name is required."
     fine_tune_from = config["FineTune"]["FROM"]
 
-    if(to_save or eval_fine_tuned):
-        # store dir
-        current_finetune_dir = Path(config["SolidConfig"]["FINETUNE_BASE_DIR_PATH"]) / fine_tune_from / config["FineTune"]["Model"][fine_tune_from]["hug_base_model_name"] / config["FineTune"]["Data"]["name"] / config["FineTune"]["FineTuneName"]
-        # make dir
-        if (not current_finetune_dir.is_dir()):
-            current_finetune_dir.mkdir(parents=True, exist_ok=True)
-
-        # searching for the same hyperparameters config
-        not_from_base = [f"FineTune/Model/{base_type}" for base_type in config["FineTune"]["Model"].keys() if base_type != fine_tune_from]
+    if(to_save or eval_fine_tuned): # To access fine-tune dir to save or access it for evaluation
         if(not eval_fine_tuned):
+            # store dir
+            current_finetune_dir = Path(config["SolidConfig"]["FINETUNE_BASE_DIR_PATH"]) / fine_tune_from / \
+                                   config["FineTune"]["Model"][fine_tune_from]["hug_base_model_name"] / \
+                                   config["FineTune"]["Data"]["name"] / config["FineTune"]["FineTuneName"]
+            # make dir
+            if (not current_finetune_dir.is_dir()):
+                current_finetune_dir.mkdir(parents=True, exist_ok=True)
+
+            # searching for the same hyperparameters config
+            not_from_base = [f"FineTune/Model/{base_type}" for base_type in config["FineTune"]["Model"].keys() if
+                             base_type != fine_tune_from]
+
             except_keys = [
                 "AutoModelForCausalLM",
                 "SFT",
@@ -29,12 +41,24 @@ def get_model_dir_path(config, eval_fine_tuned = False, to_save: bool = False) -
             # call
             current_finetune_dir = find_model_conf_dir(current_finetune_dir, config, except_keys)
         else: # to access fine-tuned model for evaluation
+            # store dir
+            assert "PreFineTuned" in config["FineTune"]["Model"], "PreFineTuned not found."
+            current_finetune_dir = Path(config["SolidConfig"]["FINETUNE_BASE_DIR_PATH"]) / fine_tune_from / \
+                                   config["FineTune"]["Model"][fine_tune_from]["hug_base_model_name"] / \
+                                   config["FineTune"]["Data"]["name"] / config["FineTune"]["FineTuneName"]
+
             current_finetune_dir = current_finetune_dir / config['Evaluate']['path']['hyperparameter_name']
+            assert current_finetune_dir.is_dir(), f"PreFineTuned model is not available: {current_finetune_dir}"
         return current_finetune_dir
     else: # get base model dir
-        # to base model
-        base_model_dir = Path(config["SolidConfig"]["MODEL_BASE_DIR_PATH"]) / fine_tune_from / config["FineTune"]["Model"][fine_tune_from][
-            "hug_base_model_name"]
+        
+        if(pre_finetuned_model): # get per-fine-tuned model as a base model
+            base_model_dir = Path(config["SolidConfig"]["MODEL_BASE_DIR_PATH"]) / "PreFineTuned" / \
+                             config["FineTune"]["Model"]["PreFineTuned"]["hug_base_model_name"]
+        else:
+            # to base model
+            base_model_dir = Path(config["SolidConfig"]["MODEL_BASE_DIR_PATH"]) / fine_tune_from / config["FineTune"]["Model"][fine_tune_from][
+                "hug_base_model_name"]
 
         # make dir
         if (not base_model_dir.is_dir()):

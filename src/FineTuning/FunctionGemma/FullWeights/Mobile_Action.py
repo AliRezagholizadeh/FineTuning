@@ -18,12 +18,13 @@ class FuncGemma_MobileAction_FT:
         self.logger = logger
         self.fft = None
 
+        FT_Settings_gen = finetuning_setup(run_config,
+                                           logger)  # {"access_token":, "model_name": ,"model_path":, "store_model_path":}
+        self.FT_Settings = next(FT_Settings_gen)
+
         # load model and relatives
         try:
             # self.FT_Settings = finetuning_setup(run_config, logger)  # {"access_token":, "model_name": ,"model_path":, "store_model_path":}
-
-            FT_Settings_gen = finetuning_setup(run_config, logger)  # {"access_token":, "model_name": ,"model_path":, "store_model_path":}
-            self.FT_Settings = next(FT_Settings_gen)
 
             print(f"FT_Settings: {self.FT_Settings}")
             self.base_model, self.processor, self.tokenizer, self.device = Load_Hugging_Face_Model(
@@ -43,7 +44,7 @@ class FuncGemma_MobileAction_FT:
         # load database
         try:
             mobile_action = MobileActionsDS(run_config, self.tokenizer, logger)
-            dataset = mobile_action.Load_Data()
+            self.dataset = mobile_action.Load_Data()
             self.max_sequence_length = mobile_action.max_sequence_length()
                 # train, valid
             self.train_dataset, self.eval_dataset = mobile_action.train_eval_split()

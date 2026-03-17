@@ -1,6 +1,12 @@
 dist/
 .env
+.pyc
 model/
 fine_tuned/
 datasets/
 logs/
+comparison/
+__pycache__/
+**/__pycache__
+.DS_Store
+.idea/

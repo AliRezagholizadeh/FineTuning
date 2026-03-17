@@ -93,9 +93,10 @@ def finetuning_setup(run_config:dict, logger: logging = None):
         ft_config_setup["SFT"]["output_dir"] = str(store_model_path)
 
         max_length = yield ft_config_setup
-
-        print("Now adding max length")
-        ft_config_setup["SFT"]["max_length"] = max_length
+        
+        if(max_length):
+            print("Now adding max length")
+            ft_config_setup["SFT"]["max_length"] = max_length
 
 
 

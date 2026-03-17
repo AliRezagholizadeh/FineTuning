@@ -53,21 +53,18 @@ def Load_Hugging_Face_Model(access_token :str, model_name: str = None, model_pat
         if logger:
             logger.info(">> Logged in Hugging Face. <<")
 
-        # DOWNLOAD: tokenizer first with use_fast=False, then processor, then model
+        # DOWNLOAD from Hugging Face. We avoid calling save_pretrained on the tokenizer/processor
+        # because some tokenizers (e.g. GemmaTokenizer) are not JSON-serializable in older
+        # transformers versions when saving tokenizer_config. Rely on the HF cache instead.
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
-        tokenizer.save_pretrained(model_path)
         try:
             processor = AutoProcessor.from_pretrained(model_name, device_map="auto", fix_mistral_regex=True, tokenizer=tokenizer)
-        except (TypeError, ValueError) as e:
-            if isinstance(e, ValueError) and "tokenizer" not in str(e).lower() and "backend" not in str(e).lower():
-                raise
+        except (TypeError, ValueError):
             processor = tokenizer
-        processor.save_pretrained(model_path)
         model = AutoModelForCausalLM.from_pretrained(model_name, **AutoModelForCausalLM_setting)
-        model.save_pretrained(model_path)
 
         if logger:
-            logger.info(f">> Model and Processor ({model_name}) downloaded from Hugging Face and stored locally. <<")
+            logger.info(f">> Model and Processor ({model_name}) downloaded from Hugging Face. <<")
 
     # set device
     if torch.cuda.is_available():

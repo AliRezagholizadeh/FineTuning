@@ -12,6 +12,7 @@ class MobileActionsDS:
         self.setting = setting
         self.tokenizer = tokenizer
         self.dataset = None
+        self.logger = logger
 
 
 
@@ -41,6 +42,7 @@ class MobileActionsDS:
 
 
     def max_sequence_length(self):
+
         if(self.processed_dataset):
             longest_example = max(self.processed_dataset, key=lambda example: len(example['prompt'] + example['completion']))
             longest_example_token_count = len(self.tokenizer.tokenize(longest_example['prompt'] + longest_example['completion']))
