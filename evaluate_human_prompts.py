@@ -71,6 +71,8 @@ def main():
         max_token_count = mobile_action.max_sequence_length()
         # train, valid
         train_dataset, eval_dataset = mobile_action.train_eval_split()
+        print(f"train_dataset: {train_dataset.shape} - type {type(train_dataset)}")
+        print(f"train_dataset: {train_dataset.shape} - type {type(eval_dataset)}")
         logger.info(f"evaluation_small.py: mobile action dataset loaded and split to train and eval.")
     except Exception as e:
         logger.error(f"evaluation_small.py: error in loading mobile action dataset. {e}")

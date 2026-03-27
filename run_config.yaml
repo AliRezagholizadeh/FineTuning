@@ -12,7 +12,7 @@ FineTune:
     Original:
       name: "functiongemma-270m-it"
       hug_base_model_name: "google/functiongemma-270m-it"
-    PreFineTuned:
+    PreFineTuned:  # to be used in evaluation
       name: "FunctionGemma_270M_Mobile_Actions"
       hug_base_model_name: "litert-community/FunctionGemma_270M_Mobile_Actions"
   FROM: "Original"                              # should be one of: [Original, PreFineTuned]
@@ -20,6 +20,8 @@ FineTune:
 
   Data:
     name: "google_mobile-actions"
+#    name: "alirghz_mobile-actions"
     hug_base_data_name: "google/mobile-actions"
+#    hug_base_data_name: "AliRGHZ/Mobile-Action"
 
 

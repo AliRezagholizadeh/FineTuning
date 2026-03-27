@@ -78,14 +78,6 @@ def main():
     except Exception as e:
         logger.error(f"evaluation_small.py: error in loading mobile action dataset. {e}")
         raise e
-    # try:
-    #     funcGem_mobileAction_ft = FuncGemma_MobileAction_FT(run_config, logger)
-    # except Exception as e:
-    #     logger.error(f"Failed to instantiate the Function Gemma Fine Tuning: {e}")
-    #     raise e
-
-    # FT_Settings = funcGem_mobileAction_ft.FT_Settings
-
 
 
     # trained_gemma_model_dir = FT_Settings["store_model_path"]
@@ -131,7 +123,7 @@ def main():
     print(f"\033[1mBase model score\033[0m       : {base_scored['correct'].mean()}")
     print(f"\033[1mFine-tuned model score\033[0m : {trained_scored['correct'].mean()}")
 
-
+    review(trained_scored)
 
 if __name__ == "__main__":
     main()

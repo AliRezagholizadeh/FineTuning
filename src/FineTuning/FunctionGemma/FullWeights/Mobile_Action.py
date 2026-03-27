@@ -48,6 +48,7 @@ class FuncGemma_MobileAction_FT:
             self.max_sequence_length = mobile_action.max_sequence_length()
                 # train, valid
             self.train_dataset, self.eval_dataset = mobile_action.train_eval_split()
+            
             logger.info(f"Mobile_Action.py: mobile action dataset loaded and split to train and eval.")
         except Exception as e:
             logger.error(f"Mobile_Action.py: error in loading mobile action dataset. {e}")
