@@ -2,6 +2,7 @@
 import copy
 import logging
 from src.FineTuning.tools.utils import get_model_dir_path
+from huggingface_hub import login
 from dotenv import load_dotenv
 from pathlib import Path
 import os
@@ -50,7 +51,8 @@ def finetuning_setup(run_config:dict, logger: logging = None):
         # update with run_config
         ft_config_setup = copy.deepcopy(run_config)
 
-
+        assert access_token, "access_token is not provided."
+        login(access_token)
 
         # get some parameters from fine-tune related configs: finetune_config.yaml
         with open(MODULE_PATH / "finetune_config.yaml", "r") as file:

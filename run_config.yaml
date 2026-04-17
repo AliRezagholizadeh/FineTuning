@@ -19,9 +19,9 @@ FineTune:
   NumEpochs: 2
 
   Data:
-    name: "google_mobile-actions"
-#    name: "alirghz_mobile-actions"
-    hug_base_data_name: "google/mobile-actions"
-#    hug_base_data_name: "AliRGHZ/Mobile-Action"
+#    name: "google_mobile-actions"
+    name: "alirghz_mobile-actions"
+#    hug_base_data_name: "google/mobile-actions"
+    hug_base_data_name: "AliRGHZ/Mobile-Actions"
 
 

@@ -1,7 +1,7 @@
 from src.FineTuning.FunctionGemma.FullWeights.Mobile_Action import FuncGemma_MobileAction_FT
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from src.Evaluation.SmallEvaluations.evaluate import gemma_small_test
-from src.Evaluation.SmallEvaluations.google_helper import get_scored_data_frame
+from src.Evaluation.SmallEvaluations.google_helper import get_scored_data_frame, review
 from src.FineTuning.tools.LoadModel import Load_Hugging_Face_Model
 from src.FineTuning.FunctionGemma.setup import finetuning_setup
 from src.FineTuning.tools.LoadDataset import MobileActionsDS
@@ -82,25 +82,48 @@ def main():
 
     # trained_gemma_model_dir = FT_Settings["store_model_path"]
     trained_gemma_model_dir = get_model_dir_path(FT_Settings, eval_fine_tuned = True, to_save=False)
-    preFineTuned_gemma_model_dir = get_model_dir_path(FT_Settings,pre_finetuned_model = True, to_save=False)
-    logger.info(f"main: fine-tuned model dir: {trained_gemma_model_dir} \n pre_fine-tuned model dir: {preFineTuned_gemma_model_dir}")
+    preFineTuned_gemma_model_name_dir = get_model_dir_path(FT_Settings,pre_finetuned_model = True, to_save=False)
+
+    assert isinstance(trained_gemma_model_dir,
+                      Path), f"trained_gemma_model_dir expected to be string: {trained_gemma_model_dir}"
+    assert isinstance(preFineTuned_gemma_model_name_dir,
+                      list), f"preFineTuned_gemma_model_name_dir expected to be list: {preFineTuned_gemma_model_name_dir}"
+    logger.info(f"main: fine-tuned model dir: {trained_gemma_model_dir} \n pre_fine-tuned model dir: {preFineTuned_gemma_model_name_dir[1]}")
 
     # Reuse the tools from the sample
     # tools = json.loads(funcGem_mobileAction_ft.dataset[0]['text'])['tools']
     tools = json.loads(dataset[0]['text'])['tools']
     logger.info(f"main: tools loaded: {tools}")
 
+    print(f"To compare trained model located in {trained_gemma_model_dir} with the model located in {preFineTuned_gemma_model_name_dir[1]}.")
 
     # load model and create pipeline
     # Fine-tuned pipeline
     trained_model = AutoModelForCausalLM.from_pretrained(trained_gemma_model_dir, device_map="auto")
     tokenizer = AutoTokenizer.from_pretrained(trained_gemma_model_dir)
     # new_pipe = pipeline("text-generation", model=trained_model, tokenizer=tokenizer)
-    # load baseline
-    base_pre_trained_model = AutoModelForCausalLM.from_pretrained(preFineTuned_gemma_model_dir, device_map="auto")
-    base_tokenizer = AutoTokenizer.from_pretrained(preFineTuned_gemma_model_dir)
-    # pipe_base = pipeline("text-generation", model=base_pre_trained_model, tokenizer=base_tokenizer, device_map="auto")
 
+    # load baseline
+    # base_pre_trained_model = AutoModelForCausalLM.from_pretrained(preFineTuned_gemma_model_dir, device_map="auto")
+    # base_tokenizer = AutoTokenizer.from_pretrained(preFineTuned_gemma_model_dir)
+
+    # load model from local dir or download it from huggingface
+    try:
+
+        print(f"FT_Settings: {FT_Settings}")
+        base_pre_trained_model, base_processor, base_tokenizer, base_device = Load_Hugging_Face_Model(
+            access_token=FT_Settings["access_token"], model_name=preFineTuned_gemma_model_name_dir[0],
+            model_path=preFineTuned_gemma_model_name_dir[1],
+            AutoModelForCausalLM_setting=FT_Settings["AutoModelForCausalLM"], logger=logger)
+        base_model.config.pad_token_id = tokenizer.pad_token_id
+
+        message = f"Setup parameters and Model loaded. Device: {base_model.device} - DType:  {base_model.dtype}"
+        print(message)
+        logger.info(f"Mobile_Action.py: {message}")
+    except Exception as e:
+        logger.error(f"Mobile_Action.py: error in loading setups or loading the model. {e}")
+        raise e
+    # pipe_base = pipeline("text-generation", model=base_pre_trained_model, tokenizer=base_tokenizer, device_map="auto")
 
     # evaluate
     trained_scored = get_scored_data_frame(

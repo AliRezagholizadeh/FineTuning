@@ -3,6 +3,7 @@ from random import randint
 from datasets import load_dataset, load_from_disk, Dataset
 import datasets
 from transformers import AutoTokenizer
+from json_repair import repair_json
 from huggingface_hub import hf_hub_download
 import json
 import logging
@@ -42,7 +43,7 @@ class MobileActionsDS:
         print(f"dataset: {self.dataset}")
         # print(f"len process dataset text: {len(self.dataset['text'])}")
         self.processed_dataset = self.dataset.map(self.apply_format)
-        # return self.dataset
+        return self.dataset
 
     def Sample_Data(self):
         if(self.dataset):
@@ -65,76 +66,199 @@ class MobileActionsDS:
         return max_token_count
 
 
+    # def apply_format(self, sample):
+    #     # print(f"sample: {sample}")
+    #     template_iputs = json.loads(sample['text'])
+    #     # print("sample: ", sample)
+    #     # print("sample type: ", type(sample))
+    #
+    #     # if(isinstance(sample, str)):
+    #     #     template_iputs = json.loads(sample)
+    #     # elif(isinstance(sample, dict)):
+    #     #     if ("text" in sample):
+    #     #         template_iputs = json.loads(sample['text'])
+    #     #     else:
+    #     #         raise Exception(f"Dict sample is not in a right format. 'text' expected to be in it, but is: {sample}")
+    #     # elif(isinstance(sample, datasets.formatting.formatting.LazyRow)):
+    #     #     # template_iputs = sample.to_dict()
+    #     #     sample = dict(sample)
+    #     #
+    #     #     # template_iputs = json.loads(json.dumps(sample))
+    #     #     # sample = json.loads(json.dumps(sample))
+    #     #
+    #     #     assert "messages" in sample, f"messages is not in sample: {sample}"
+    #     #     assert "tools" in sample, f"tools is not in sample: {sample}"
+    #     #
+    #     #     # convert string elements of tool to dict
+    #     #     sample["tools"] = list(sample["tools"] )
+    #     #     if(isinstance(sample["tools"][0], str)):
+    #     #         sample["tools"] = [json.loads(tool) for tool in sample["tools"]]
+    #     #
+    #     #     sample["messages"] = list(sample["messages"])
+    #     #     if (isinstance(sample["messages"][0], str)):
+    #     #         sample["messages"] = [json.loads(message) for message in sample["messages"]]
+    #     #
+    #     #     # sample["messages"] = json.loads(sample["messages"])
+    #     #     # sample["tools"] = json.loads(sample["tools"])
+    #     #     # template_iputs = sample
+    #     # else:
+    #     #
+    #     #     print(f"Sample type Error: {type(sample)}")
+    #     #     # template_iputs = sample
+    #     #     raise Exception(f"Unrecognized sample type: {type(sample)}")
+    #
+    #     assert isinstance(template_iputs, dict), f"Error: template_iputs type: {type(template_iputs)}"
+    #     assert "messages" in template_iputs, f"messages is not in template_iputs: {template_iputs.keys()}"
+    #     assert "tools" in template_iputs, f"tools is not in template_iputs: {template_iputs.keys()}"
+    #
+    #     # print(f"template_iputs: {len(template_iputs)}")
+    #     # print(f"messages type: {type(template_iputs['messages'])}")
+    #     # print(f"tools type: {type(template_iputs['tools'])}")
+    #     # print(f"tools: {template_iputs['tools']}")
+    #
+    #     prompt_and_completion = self.tokenizer.apply_chat_template(
+    #         template_iputs['messages'],
+    #         tools=template_iputs['tools'],
+    #         tokenize=False,
+    #         # add_generation_prompt is False since we don't need model output after all
+    #         # messages.
+    #         add_generation_prompt=False)
+    #
+    #     # print("to get prompt template..")
+    #     prompt = self.tokenizer.apply_chat_template(
+    #         template_iputs['messages'][:-1],
+    #         tools=template_iputs['tools'],
+    #         tokenize=False,
+    #         # add_generation_prompt is True since we would like to include
+    #         # "<start_of_turn>model" in the prompt, if needed.
+    #         add_generation_prompt=True)
+    #
+    #     # print("to get completion..")
+    #
+    #     completion = prompt_and_completion[len(prompt):]
+    #
+    #     return {
+    #         "prompt": prompt,
+    #         "completion": completion,
+    #         "split": template_iputs["metadata"],
+    #     }
     def apply_format(self, sample):
         # print(f"sample: {sample}")
-        template_iputs = json.loads(sample['text'])
-        # print("sample: ", sample)
-        # print("sample type: ", type(sample))
+        prompt_and_completion = None
+        prompt = None
 
-        # if(isinstance(sample, str)):
-        #     template_iputs = json.loads(sample)
-        # elif(isinstance(sample, dict)):
-        #     if ("text" in sample):
-        #         template_iputs = json.loads(sample['text'])
-        #     else:
-        #         raise Exception(f"Dict sample is not in a right format. 'text' expected to be in it, but is: {sample}")
-        # elif(isinstance(sample, datasets.formatting.formatting.LazyRow)):
-        #     # template_iputs = sample.to_dict()
-        #     sample = dict(sample)
-        #
-        #     # template_iputs = json.loads(json.dumps(sample))
-        #     # sample = json.loads(json.dumps(sample))
-        #
-        #     assert "messages" in sample, f"messages is not in sample: {sample}"
-        #     assert "tools" in sample, f"tools is not in sample: {sample}"
-        #
-        #     # convert string elements of tool to dict
-        #     sample["tools"] = list(sample["tools"] )
-        #     if(isinstance(sample["tools"][0], str)):
-        #         sample["tools"] = [json.loads(tool) for tool in sample["tools"]]
-        #
-        #     sample["messages"] = list(sample["messages"])
-        #     if (isinstance(sample["messages"][0], str)):
-        #         sample["messages"] = [json.loads(message) for message in sample["messages"]]
-        #
-        #     # sample["messages"] = json.loads(sample["messages"])
-        #     # sample["tools"] = json.loads(sample["tools"])
-        #     # template_iputs = sample
-        # else:
-        #
-        #     print(f"Sample type Error: {type(sample)}")
-        #     # template_iputs = sample
-        #     raise Exception(f"Unrecognized sample type: {type(sample)}")
+        message = "Within apply_format: \n"
+
+        template_iputs = json.loads(sample['text'])
+        # message += f"sample text recognized. \n"
 
         assert isinstance(template_iputs, dict), f"Error: template_iputs type: {type(template_iputs)}"
         assert "messages" in template_iputs, f"messages is not in template_iputs: {template_iputs.keys()}"
         assert "tools" in template_iputs, f"tools is not in template_iputs: {template_iputs.keys()}"
+        # message += f"assert passed: There are  messages and tools in the json format of the sample. \n"
+        # cast message part if required
+        # message += f"messages: {template_iputs['messages']}\n"
+        # message += f"messages type: {type(template_iputs['messages'])}\n"
+        if (isinstance(template_iputs['messages'], str)):
+            # custom replaces to make it compatible with json
+            # code = "~*~|$*@!|~"
+            message_before = template_iputs['messages']
 
-        # print(f"template_iputs: {len(template_iputs)}")
-        # print(f"messages type: {type(template_iputs['messages'])}")
-        # print(f"tools type: {type(template_iputs['tools'])}")
-        # print(f"tools: {template_iputs['tools']}")
+            try:
+                # messages = str_messages_to_json(message_before)
+                message_before = repair_json(message_before)
 
-        prompt_and_completion = self.tokenizer.apply_chat_template(
-            template_iputs['messages'],
-            tools=template_iputs['tools'],
-            tokenize=False,
-            # add_generation_prompt is False since we don't need model output after all
-            # messages.
-            add_generation_prompt=False)
+                messages = json.loads(message_before)
+                template_iputs['messages'] = messages
+            except Exception as e:
+                message += f"Error in loading messages using json: \n{e}\n>> Original messages: {template_iputs['messages']}\nmessage_before: {message_before}"
+                self.Print(message)
+            finally:
+                # self.Print(message)
+                pass
+
+        assert isinstance(template_iputs['messages'], list), f"messages in template_iputs is not in list type, but {type(template_iputs['messages'])}."
+        message += f"json loaded messages: {template_iputs['messages']}\n"
+
+        # cast tools part if required
+        # message += f"tools: {template_iputs['tools']}\n"
+        # message += f"tools type: {type(template_iputs['tools'])}\n"
+        if(isinstance(template_iputs['tools'], str)):
+            try:
+
+                # template_iputs['tools'] = template_iputs['tools'].replace("\'", "\"")
+                template_iputs['tools'] = repair_json(template_iputs['tools'])
+
+                tools = json.loads(template_iputs['tools'])
+                template_iputs['tools'] = tools
+            except Exception as e:
+                message += f"Error in loading tools using json: \n{e}\n"
+                self.Print(message)
+
+            finally:
+                # self.Print(message)
+                pass
+        assert isinstance(template_iputs['tools'], list), f"tools in template_iputs is not in list type, but {type(template_iputs['tools'])}."
+
+        message += f"json loaded tools: {template_iputs['tools']}\n"
+
+        # self.Print("Message: {}")
+        # Apply Tokenizer Chat Template
+        try:
+            prompt_and_completion = self.tokenizer.apply_chat_template(
+                template_iputs['messages'],
+                tools=template_iputs['tools'],
+                tokenize=False,
+                # tokenize=True,
+                # add_generation_prompt is False since we don't need model output after all
+                # messages.
+                add_generation_prompt=False)
+            message += f"prompt and completion gained by tokenizer.apply_chat_template.\n"
+            # message += f"prompt_and_completion: {prompt_and_completion}\n"
+
+        except Exception as e:
+            message += f"Error in gaining prompt and completion by tokenizer.apply_chat_template.\n{e}\n"
+            self.Print(message)
+
+        finally:
+            # self.Print(message)
+            pass
 
         # print("to get prompt template..")
-        prompt = self.tokenizer.apply_chat_template(
-            template_iputs['messages'][:-1],
-            tools=template_iputs['tools'],
-            tokenize=False,
-            # add_generation_prompt is True since we would like to include
-            # "<start_of_turn>model" in the prompt, if needed.
-            add_generation_prompt=True)
+        try:
+            prompt = self.tokenizer.apply_chat_template(
+                template_iputs['messages'][:-1],
+                tools=template_iputs['tools'],
+                tokenize=False,
+                # tokenize=True,
+                # add_generation_prompt is True since we would like to include
+                # "<start_of_turn>model" in the prompt, if needed.
+                add_generation_prompt=True)
+
+            message += f"prompt gained by tokenizer.apply_chat_template.\n "
+            message += f"prompt: {prompt}\n"
+        except Exception as e:
+            message += f"Error in gaining prompt by tokenizer.apply_chat_template.\n{e}\n"
+            self.Print(message)
+
+        finally:
+            # self.Print(message)
+            pass
 
         # print("to get completion..")
 
-        completion = prompt_and_completion[len(prompt):]
+        if(prompt_and_completion and prompt):
+            completion = prompt_and_completion[len(prompt):]
+            message += f"completion: {completion}\n"
+
+        else:
+            raise Exception(message)
+
+        message += f"completion gained by tokenizer.apply_chat_template.\n"
+
+        message += f"To pack prompt, completion, split into return variable dict.\n"
+
+        # self.Print(message)
 
         return {
             "prompt": prompt,

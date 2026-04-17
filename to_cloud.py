@@ -20,10 +20,12 @@ def to_hugging_face(output_dir, base_model, trained_model_name):
 
 
     username = whoami()['name']
+    # hf_repo_id = f"{username}/functiongemma-270m-it-{trained_model_name}"
     hf_repo_id = f"{username}/functiongemma-270m-it-{trained_model_name}"
 
     model_name = f"functiongemma-270m-it-{trained_model_name}"
-    repo_url = trained_model.push_to_hub(hf_repo_id, create_repo=True, commit_message="Upload model")
+    # repo_url = trained_model.push_to_hub(hf_repo_id, create_repo=True, commit_message="Upload model")
+    repo_url = trained_model.push_to_hub(hf_repo_id, commit_message="Upload model")
     # repo_url = trained_model.push_to_hub(hf_repo_id, commit_message="Upload model")
     # repo_url = trained_model.push_to_hub(model_name)
     tokenizer.push_to_hub(hf_repo_id)
@@ -72,6 +74,6 @@ if __name__ == "__main__":
 
     # to store the fine-tuned model on hugging face
     # @markdown Name your model
-    trained_model_name = "mobile-actions"  # @param {type:"string"}
+    trained_model_name = "extended-mobile-actions"  # @param {type:"string"}
     based_model = "google/functiongemma-270m-it"
     to_hugging_face(trained_gemma_model_dir, based_model, trained_model_name)

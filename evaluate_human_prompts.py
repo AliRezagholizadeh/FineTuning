@@ -24,7 +24,7 @@ def main():
     logdir.mkdir(parents=True, exist_ok=True)
     datetime_now = f"{datetime.now(ZoneInfo('America/Toronto')).strftime('%Y-%m-%dT%H:%M:%S %Z')}"
     logging.basicConfig(filename=f'{logdir}/FineTuned_and_PreFineTuned_FuncGemm_MobileAct_{datetime_now}.log', level=logging.INFO,
-                        format='%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+                        format='%(asctime)s:%(levelname)s:%(name)s:%(message)s', force=True)
 
     # Create a logger for the main module
     logger = logging.getLogger(__name__)
@@ -89,12 +89,16 @@ def main():
 
     # trained_gemma_model_dir = FT_Settings["store_model_path"]
     trained_gemma_model_dir = get_model_dir_path(FT_Settings, eval_fine_tuned = True, to_save=False)
-    preFineTuned_gemma_model_dir = get_model_dir_path(FT_Settings,pre_finetuned_model = True, to_save=False)
-    logger.info(f"main: fine-tuned model dir: {trained_gemma_model_dir} \n pre_fine-tuned model dir: {preFineTuned_gemma_model_dir}")
+    preFineTuned_gemma_model_name_dir = get_model_dir_path(FT_Settings,pre_finetuned_model = True, to_save=False)
+    logger.info(f"main: fine-tuned model dir: {trained_gemma_model_dir} \n pre_fine-tuned model dir: {preFineTuned_gemma_model_name_dir[1]}")
 
-
+    assert isinstance(trained_gemma_model_dir, Path), f"trained_gemma_model_dir expected to be string: {trained_gemma_model_dir}"
+    assert isinstance(preFineTuned_gemma_model_name_dir, list), f"preFineTuned_gemma_model_name_dir expected to be list: {preFineTuned_gemma_model_name_dir}"
+    
     # Reuse the tools from the sample
     # tools = json.loads(funcGem_mobileAction_ft.dataset[0]['text'])['tools']
+    print(f"main: fine-tuned model dir: {trained_gemma_model_dir} \n pre_fine-tuned model dir: {preFineTuned_gemma_model_name_dir[1]}")
+    print(f"main: dataset: {dataset} \n dataset[0]: {dataset[0]}")
     tools = json.loads(dataset[0]['text'])['tools']
     logger.info(f"main: tools loaded: {tools}")
 
@@ -112,7 +116,7 @@ def main():
                 logger.info(f"main: user_prompt to test: \n{user_prompt}")
 
                 # evaluate the prompt
-                gemma_small_test(trained_gemma_model_dir, preFineTuned_gemma_model_dir, user_prompt= user_prompt, tools= tools, max_token_count = max_token_count, logger = logger)
+                gemma_small_test(FT_Settings, trained_gemma_model_dir, preFineTuned_gemma_model_name_dir, user_prompt= user_prompt, tools= tools, max_token_count = max_token_count, logger = logger)
 
                 print(line_message)
                 logger.info(line_message)

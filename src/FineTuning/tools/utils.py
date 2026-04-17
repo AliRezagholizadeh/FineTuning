@@ -10,7 +10,7 @@ def get_model_dir_path(config, eval_fine_tuned = False, pre_finetuned_model = Fa
     :param eval_fine_tuned: To access fined-tuned model for the evaluation. It will access Evaluate parameter in the config to access specific hyper_parameters.
     :param pre_trained_model: To access PreFineTuned model.
     :param to_save: 
-    :return: 
+    :return: str or list. string for to-save (for saving fine-tuned model) and fine-tuned model (for evaluation) list of [name, dir] for accessing base or pre-fine-tuned model
     """
     assert "FROM" in config["FineTune"], "From which base dir name is required."
     fine_tune_from = config["FineTune"]["FROM"]
@@ -55,17 +55,19 @@ def get_model_dir_path(config, eval_fine_tuned = False, pre_finetuned_model = Fa
         if(pre_finetuned_model): # get per-fine-tuned model as a base model
             base_model_dir = Path(config["SolidConfig"]["MODEL_BASE_DIR_PATH"]) / "PreFineTuned" / \
                              config["FineTune"]["Model"]["PreFineTuned"]["hug_base_model_name"]
+            base_model_name_dir = [config["FineTune"]["Model"]["PreFineTuned"]["hug_base_model_name"], base_model_dir]
         else:
             # to base model
             base_model_dir = Path(config["SolidConfig"]["MODEL_BASE_DIR_PATH"]) / fine_tune_from / config["FineTune"]["Model"][fine_tune_from][
                 "hug_base_model_name"]
+            base_model_name_dir = [config["FineTune"]["Model"][fine_tune_from]["hug_base_model_name"], base_model_dir]
 
         # make dir
         if (not base_model_dir.is_dir()):
             base_model_dir.mkdir(parents=True, exist_ok=True)
 
 
-        return base_model_dir
+        return base_model_name_dir
 
 
 
