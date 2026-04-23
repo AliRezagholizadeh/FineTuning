@@ -1,5 +1,6 @@
 dist/
 .env
+.env_
 .pyc
 model/
 fine_tuned/

@@ -20,14 +20,14 @@ class MobileActionsDS:
 
     def Load_Data(self):
         # repo_id = "google/mobile-actions"
-        repo_id = self.setting["FineTune"]["Data"]["hug_base_data_name"]
-        data_path = Path(self.setting["SolidConfig"]["DATA_BASE_DIR_PATH"]) / repo_id
+        self.repo_id = self.setting["FineTune"]["Data"]["hug_base_data_name"]
+        self.data_path = Path(self.setting["SolidConfig"]["DATA_BASE_DIR_PATH"]) / self.repo_id
 
         # load local pre-stored dataset or load it from remote repo
-        if(data_path.is_dir()):
-            self.dataset = load_from_disk(data_path)
+        if(self.data_path.is_dir()):
+            self.dataset = load_from_disk(self.data_path)
         else:
-            data_file = hf_hub_download(repo_id= repo_id, filename="dataset.jsonl", repo_type="dataset")
+            data_file = hf_hub_download(repo_id= self.repo_id, filename="dataset.jsonl", repo_type="dataset")
             # data_file = hf_hub_download(repo_id= repo_id, filename="data/train-00000-of-00001.parquet", repo_type="dataset")
             # data_file = hf_hub_download(repo_id= repo_id, repo_type="dataset")
             # self.dataset = load_dataset("text", data_files=data_file, encoding="utf-8")
@@ -36,7 +36,7 @@ class MobileActionsDS:
             print(f"dataset type: {type(self.dataset)}")
             self.dataset = self.dataset["train"].shuffle()
 
-            self.dataset.save_to_disk(data_path)
+            self.dataset.save_to_disk(self.data_path)
 
         # apply format
         print(f"dataset type: {type(self.dataset)}")
@@ -148,9 +148,12 @@ class MobileActionsDS:
         prompt = None
 
         message = "Within apply_format: \n"
+        # print(f"sample: {sample}")
 
         template_iputs = json.loads(sample['text'])
         # message += f"sample text recognized. \n"
+
+        # print(f"template_iputs: {template_iputs}")
 
         assert isinstance(template_iputs, dict), f"Error: template_iputs type: {type(template_iputs)}"
         assert "messages" in template_iputs, f"messages is not in template_iputs: {template_iputs.keys()}"
@@ -169,6 +172,11 @@ class MobileActionsDS:
                 message_before = repair_json(message_before)
 
                 messages = json.loads(message_before)
+
+                # if the it has extra list shape
+                while(len(messages) == 1 and isinstance(message[0], list)):
+                    messages = messages[0]
+
                 template_iputs['messages'] = messages
             except Exception as e:
                 message += f"Error in loading messages using json: \n{e}\n>> Original messages: {template_iputs['messages']}\nmessage_before: {message_before}"
@@ -217,7 +225,7 @@ class MobileActionsDS:
             # message += f"prompt_and_completion: {prompt_and_completion}\n"
 
         except Exception as e:
-            message += f"Error in gaining prompt and completion by tokenizer.apply_chat_template.\n{e}\n"
+            message += f"Error in gaining prompt and completion by tokenizer.apply_chat_template. \nThe sample in which this error happened: {template_iputs}\n{e}\n"
             self.Print(message)
 
         finally:
@@ -238,7 +246,7 @@ class MobileActionsDS:
             message += f"prompt gained by tokenizer.apply_chat_template.\n "
             message += f"prompt: {prompt}\n"
         except Exception as e:
-            message += f"Error in gaining prompt by tokenizer.apply_chat_template.\n{e}\n"
+            message += f"Error in gaining prompt by tokenizer.apply_chat_template.  \nThe sample in which this error happened: {template_iputs} \n{e}\n"
             self.Print(message)
 
         finally:
@@ -273,3 +281,20 @@ class MobileActionsDS:
         eval_dataset = self.processed_dataset.filter(lambda example: example['split'] == 'eval')
 
         return train_dataset, eval_dataset
+
+
+    def __str__(self):
+        border = f"{'=' * 40}\n"
+
+        message = "{message}"
+        return f"{border}Repo_id: {self.repo_id}\nDatabase dir: {str(self.data_path)}\n{message}{border}"
+
+    def Print(self, message:str):
+        message = f"{str(self).format(message = message)}"
+        if self.logger:
+            if ('error' in message.lower()):
+                self.logger.error(message)
+            else:
+                self.logger.info(message)
+
+        print(message)

@@ -5,6 +5,10 @@ from src.FineTuning.tools.utils import get_model_dir_path
 from huggingface_hub import login
 from dotenv import load_dotenv
 from pathlib import Path
+import getpass
+# import pwinput
+# import tkinter as tk
+
 import os
 import yaml
 
@@ -30,11 +34,14 @@ def finetuning_setup(run_config:dict, logger: logging = None):
     try:
         # load env variables within env.sample
         env_path = run_config["SolidConfig"]["ENV_DIR"]
-        load_dotenv(dotenv_path = env_path)
+        if(Path(env_path).is_file()):
+            load_dotenv(dotenv_path = env_path)
+        else:
+            print(f"There is not such env file: {env_path}. So, we need the user enter its HuggingFace access token.")
 
         # use Hugging Face Access Token and login
         HUG_ACCESS_TOKEN_NAME = run_config["SolidConfig"]["HUGGINGFACE_ACCESS_TOKEN_ENV_NAME"]
-        access_token = os.environ.get(HUG_ACCESS_TOKEN_NAME)
+        access_token = os.environ.get(HUG_ACCESS_TOKEN_NAME, None)
         # print("access_token: ", access_token)
         # run_config related parameters
         # determine model name
@@ -51,9 +58,18 @@ def finetuning_setup(run_config:dict, logger: logging = None):
         # update with run_config
         ft_config_setup = copy.deepcopy(run_config)
 
-        assert access_token, "access_token is not provided."
-        login(access_token)
+        if not access_token:
+            access_token = input("Enter your HuggingFace access token:\n")
+            # access_token = getpass.getpass(prompt="Enter your HuggingFace access token: ", echo_char="*")
+            # access_token = pwinput.pwinput(prompt="Enter your HuggingFace access token: ", mask='*')
 
+
+        assert access_token, "access_token is not provided."
+        try:
+            login(access_token)
+        except Exception as e:
+            print(f"Exception occurred during login to HuggingFace: {e}")
+            raise e
         # get some parameters from fine-tune related configs: finetune_config.yaml
         with open(MODULE_PATH / "finetune_config.yaml", "r") as file:
             finetune_config = yaml.safe_load(file)

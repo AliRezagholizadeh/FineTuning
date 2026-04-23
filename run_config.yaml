@@ -20,8 +20,10 @@ FineTune:
 
   Data:
 #    name: "google_mobile-actions"
-    name: "alirghz_mobile-actions"
+#    name: "alirghz_mobile-actions"
+    name: "mixed_google_alirghz_actions"
 #    hug_base_data_name: "google/mobile-actions"
-    hug_base_data_name: "AliRGHZ/Mobile-Actions"
+#    hug_base_data_name: "AliRGHZ/Mobile-Actions"
+    hug_base_data_name: "AliRGHZ/mobile-actions-merged"
 
 
